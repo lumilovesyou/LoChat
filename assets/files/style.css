@@ -108,6 +108,7 @@ body {
 }
 
 #settingsWindow textarea {
+  text-wrap-mode: nowrap;
   resize: none;
 }
 
@@ -151,6 +152,12 @@ body {
 
 .message a:hover {
   color: #c3b8f7;
+}
+
+.message #username {
+  color: var(--unhighlighted-text-colour);
+  margin-top: 0.5em;
+  font-size: 75%;
 }
 
 iframe {

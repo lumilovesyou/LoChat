@@ -31,12 +31,9 @@ def handleMessage():
     data = request.get_json()
     id = data.get("id")
     message = data.get("message")
-    print(f"Message recieved: {message}")
-    
     messageCache.append(message)
     if len(messageCache) > 21:
         messageCache.pop(0)
-    print(messageCache)
     response = {"status": "ok", "verify": id}
     with open(f"{currentDirectory}/messages.jsonl", "a") as file:
         file.write(json.dumps({"username": message}) + "\n")
@@ -44,14 +41,11 @@ def handleMessage():
 
 @app.route("/ping", methods=["GET"])
 def ping():
-    print(f"Pinged")    
     return jsonify({"status": "ok", "loads": messageCache}), 200
 
 @app.route("/command", methods=["POST"])
 def command():
-    print("doing command")
     command = request.get_json().get("command")
-    print(command)
     with open(f"{currentDirectory}/commands.json", "r") as file:
         commands = json.loads(file.read())
     if (command in commands):
@@ -62,17 +56,14 @@ def command():
 @socketio.on("sendMessage")
 def sendMessage(data):
     data["message"] = html.escape(data["message"])
-    print("Received message:", data)
-    
+    data["username"] = data["username"].replace("\n", "").replace("\r", "")[:25]
+    emit("confirmMessage", {"id": data["verify"]}, broadcast=False)
+    data.pop("verify")
     messageCache.append(data)
     if len(messageCache) > 30:
         messageCache.pop(0)
     with open(f"{currentDirectory}/messages.jsonl", "a") as file:
         file.write(json.dumps(data) + "\n")
-        
-    print(data)
-    print("\n")
-    emit("confirmMessage", {"id": data["verify"]}, broadcast=False)
     emit("readMessage", data, broadcast=True, include_self=False)
 
 if __name__ == '__main__':

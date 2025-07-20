@@ -2,7 +2,6 @@
 const domain = location.href;
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("Hello world!");
     swapLoading();    
 });
 
@@ -13,12 +12,11 @@ async function swapLoading() {
         });
 
         if (response.ok) {
-            console.log("Worked");
             updateWindow(1);
             setupPage();
             const data = await response.json();
             for (let i = 0; i < Object.keys(data.loads).length; i++) {
-                addMessage(data.loads[i]["message"], true);
+                addMessage(data.loads[i]["message"], true, data.loads[i]["username"]);
             }
         } else {
             console.error("Failed");
@@ -43,8 +41,10 @@ function updateWindow(id = 0) {
 
 //Page functions
 let latestID = 0;
+let cookies = document.cookie; //Do cookies you lazy idiot
 let settingsOpen = false;
-let username = "Anonymous"
+let username = "Anonymous";
+let doEmbeds = true;
 const socket = io();
 
 function setupPage() {
@@ -82,8 +82,7 @@ function setupPage() {
                 return;
             }
         }
-        console.log(data);
-        addMessage(data["message"], true);
+        addMessage(data["message"], true, data["username"]);
     });
 
     socket.on("confirmMessage", (data) => {
@@ -114,16 +113,23 @@ function toggleSettings() {
     if (settingsOpen) {
         const div = document.createElement("div");
         div.id = "settingsBackground";
-        div.innerHTML = '<div id="settingsWindow"><img src="/assets/icons/x.svg" id="closeSettings" class="button"><p>Username:</p><textarea id="username" placeholder="Username here..." rows="1"></textarea><p>Embeds:</p><select id="doEmbeds"><option value="true">True</option><option value="false">False</option></select>'
+        div.innerHTML = `<div id="settingsWindow"><img src="/assets/icons/x.svg" id="closeSettings" class="button"><p>Username:</p><textarea id="usernameInput" placeholder="Username here..." rows="1">${username}</textarea><p>Embeds:</p><select id="doEmbedsSelect"><option value="true">True</option><option value="false">False</option></select>`;
         document.body.appendChild(div);
 
         document.getElementById("closeSettings").addEventListener("click", () => {
             toggleSettings();
         });
 
-        const usernameInput = document.getElementById("username");
+        const usernameInput = document.getElementById("usernameInput");
         usernameInput.addEventListener("input", () => {
+            usernameInput.value = usernameInput.value.replace(/[\r\n]+/g, '').slice(0, 25);
             username = usernameInput.value;
+        });
+
+        const doEmbedsSelect = document.getElementById("doEmbedsSelect");
+        doEmbedsSelect.value = doEmbeds.toString();
+        doEmbedsSelect.addEventListener("change", () => {
+            doEmbeds = doEmbedsSelect.value === "true";
         });
     } else {
         document.getElementById("settingsBackground").remove();
@@ -144,21 +150,7 @@ async function sendMessage(text) {
             runCommand(text);
             return;
         }
-        console.log(text);
-        addMessage(`Me: ${text}`, false, "mine");
-        /*
-        const response = await fetch("http://172.20.166.132:5000/message", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ message: text, id: latestID })
-        });
-
-        const data = await response.json();
-        document.getElementById(data["verify"]).classList.remove("loading");
-        console.log(JSON.stringify(data, null, 2));
-        */
+        addMessage(`${text}`, false, username, "mine");
 
         socket.emit("sendMessage", {
             username: username,
@@ -170,7 +162,6 @@ async function sendMessage(text) {
 
 async function runCommand(text) {
     let command = text.slice(1, text.length);
-    console.log(command);
     if (command == "ping") {
         const response = await fetch(`${domain}/ping`, {
         method: "GET"
@@ -190,23 +181,19 @@ async function runCommand(text) {
             body: JSON.stringify({ command: command })
         });
         const data = await response.json();
-        console.log(JSON.stringify(data, null, 2));
         eval(data["execute"]);
     }
 }
 
-async function addMessage(text, verified = false, additionalTags = "") {
+async function addMessage(text, verified = false, name="", additionalTags = "") {
     const messagesBox = document.getElementById("messagesBox");
 
     const node = document.createElement("div");
-    if (text.includes("https://") || text.includes("http://")) {
-        console.log(text);
-        if (isUrl(text) && text.endsWith(".gif") || text.endsWith("c3")) {
-            console.log(text);
-            node.innerHTML = embed(text);
+    if ((text.includes("https://") || text.includes("http://")) && doEmbeds) {
+        if (isUrl(text) && text.endsWith(".gif")) {
+            text = embed(text);
         } else {
             let wordList = text.split(" ");
-            console.log(wordList)
             let embedList = [];
             for (let i = 0; i < wordList.length; i++) {
                 if (isUrl(wordList[i])) {
@@ -214,11 +201,13 @@ async function addMessage(text, verified = false, additionalTags = "") {
                     wordList[i] = `<a href="${wordList[i]}" target="_blank">${wordList[i]}</a>`;
                 }
             }
-            let message = wordList.join(" ");
-            node.innerHTML = message;
+            text = wordList.join(" ");
+            node.innerHTML = text;
         }
-    } else {
-        console.log(text);
+    }
+    if (name && !messagesBox.lastChild.innerHTML.includes(`me">${name}`) || name == "Anonymous") {
+            node.innerHTML = `<div id="username">${name}</div>${text}`;
+    } else if (node.innerHTML == "") {
         node.innerHTML = text;
     }
     node.classList = `message ${additionalTags}`;
