@@ -19,11 +19,9 @@ async function swapLoading() {
                 addMessage(data.loads[i]["message"], true, data.loads[i]["username"]);
             }
         } else {
-            console.error("Failed");
             updateWindow(2);
         }
     } catch (error) {
-        console.error("Failed");
         updateWindow(2);
     }
 }
@@ -41,10 +39,12 @@ function updateWindow(id = 0) {
 
 //Page functions
 let latestID = 0;
-let cookies = document.cookie; //Do cookies you lazy idiot
+let cookies = document.cookie;
+console.log(cookies)
 let settingsOpen = false;
-let username = "Anonymous";
-let doEmbeds = true;
+let username = getCookie("username") ? getCookie("username") : "Anonymous";
+let doEmbeds = getCookie("doEmbeds") ? getCookie("doEmbeds") === "true" : true;
+console.log(doEmbeds.toString());
 const socket = io();
 
 function setupPage() {
@@ -124,11 +124,13 @@ function toggleSettings() {
         usernameInput.addEventListener("input", () => {
             usernameInput.value = usernameInput.value.replace(/[\r\n]+/g, '').slice(0, 25);
             username = usernameInput.value;
+            document.cookie = `username=${username};`
         });
 
         const doEmbedsSelect = document.getElementById("doEmbedsSelect");
         doEmbedsSelect.value = doEmbeds.toString();
         doEmbedsSelect.addEventListener("change", () => {
+            document.cookie = `doEmbeds=${doEmbedsSelect.value};`
             doEmbeds = doEmbedsSelect.value === "true";
         });
     } else {
@@ -227,6 +229,12 @@ function isUrl(text) {
         return false;
     }
     return true;
+}
+
+function getCookie(name) { //Why are cookies so annoying?!
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
 function embed(url) {
