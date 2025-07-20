@@ -112,6 +112,12 @@ body {
   resize: none;
 }
 
+@media (max-width: 500px) {
+  #settingsWindow textarea {
+    width: 80%;
+  }
+}
+
 #settingsWindow * {
   font-size: 1.6em;
 }
@@ -162,6 +168,10 @@ body {
 
 iframe {
   border: none;
+}
+
+img {
+  max-width: 96vw;
 }
 
 .loading {
@@ -225,6 +235,12 @@ iframe {
   overflow-y: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@media (max-width: 500px) {
+  #inputTextBox {
+    width: 65%;
+  }
 }
 
 #inputTextBox::-webkit-scrollbar {
