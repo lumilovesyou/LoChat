@@ -15,6 +15,7 @@
   --text-colour: #e4e4e4;
   --background-colour: #13101c;
   --unhighlighted-text-colour: #afafaf;
+  --banner-background-color: #241e36;
   user-select: none;
 }
 
@@ -38,7 +39,7 @@ body {
 
 #banner {
     /* Styling */
-    background-color: #241e36;
+    background-color: var(--banner-background-colour);
     width: 100%;
 
     /* Font Settings */
@@ -130,6 +131,7 @@ body {
   top: 0;
 }
 
+/* Forgot to clean your code here too */
 #messagesBox {
   margin-top: var(--banner-height);
   height: calc(100vh - var(--banner-height) - 100px);
@@ -164,6 +166,40 @@ body {
   color: var(--unhighlighted-text-colour);
   margin-top: 0.5em;
   font-size: 75%;
+}
+
+#emoji {
+  max-width: 1em;
+  aspect-ratio: 1/1;
+  display: inline-block;
+  position: relative
+}
+
+#emoji .true {
+  max-width: 2.2em;
+}
+
+/* Hey idiot you forgot to clean this code up */
+#emoji .tooltip {
+  font-size: 0.5em;
+  z-index: 1;
+  position: absolute;
+
+  visibility: hidden;
+  background-color: var(--banner-background-color);
+  color: var(--text-colour);
+  border: var(--unhighlighted-text-colour) solid 1.5px;
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+#emoji:hover .tooltip {
+  visibility: visible;
 }
 
 iframe {
@@ -260,6 +296,7 @@ img {
   filter: brightness(180%);
 }
 
+/* If you're done being lazy you can clean this up as well */
 #loadingBox {
   display: flex;
   justify-content: center;

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import html
@@ -25,6 +25,10 @@ CORS(app)
 @app.route("/")
 def index():
     return render_template(f"index.html")
+
+@app.route('/emojis')
+def get_file():
+    return send_file("./emojis.json")
 
 @app.route("/message", methods=["Post"])
 def handleMessage():

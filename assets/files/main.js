@@ -1,9 +1,17 @@
 //Initial page setup
 const domain = location.href;
+let emojiList;
 
-document.addEventListener("DOMContentLoaded", () => {
-    swapLoading();    
+document.addEventListener("DOMContentLoaded", async () => {
+    emojiList = await getEmojis();
+    swapLoading();
 });
+
+async function getEmojis() { //clean this up you lazy idiot
+    const response = await fetch(`${domain}/emojis`);
+    const data = await response.json();
+    return data
+}
 
 async function swapLoading() {
     try {
@@ -40,11 +48,9 @@ function updateWindow(id = 0) {
 //Page functions
 let latestID = 0;
 let cookies = document.cookie;
-console.log(cookies)
 let settingsOpen = false;
 let username = getCookie("username") ? getCookie("username") : "Anonymous";
 let doEmbeds = getCookie("doEmbeds") ? getCookie("doEmbeds") === "true" : true;
-console.log(doEmbeds.toString());
 const socket = io();
 
 function setupPage() {
@@ -187,7 +193,7 @@ async function runCommand(text) {
     }
 }
 
-async function addMessage(text, verified = false, name="", additionalTags = "") {
+function addMessage(text, verified = false, name="", additionalTags = "") {
     const messagesBox = document.getElementById("messagesBox");
 
     const node = document.createElement("div");
@@ -205,6 +211,20 @@ async function addMessage(text, verified = false, name="", additionalTags = "") 
             }
             text = wordList.join(" ");
             node.innerHTML = text;
+        }
+    } else {
+        let emojis = text.match(/:([^:\s][^:]*?):/g) || [];
+        const onlyEmoji = (emojis.join(" ").length == text.length).toString();
+        for (let i = 0; i < emojis.length; i++) {
+            let emojiName = emojis[i].replaceAll(":", "");
+            if (Object.keys(emojiList).includes(emojiName)) {
+                if (!emojis[i].includes("\\:")) {
+                    emojiName = (emojiList[emojiName][0] == ".") ? `<img src="assets/images/emojis/${emojiList[emojiName].slice(1)}" id="emoji" class="${onlyEmoji}">` : emojiList[emojiName];
+                    text = text.replace(emojis[i], `<div id="emoji">${emojiName}<span class="tooltip">${emojiName}</span></div>`);
+                } else {
+                    text = text.replace(emojis[i], emojis[i].replace("\\:", ":"));
+                }
+            }
         }
     }
     if (name && !messagesBox.lastChild.innerHTML.includes(`me">${name}`) || name == "Anonymous") {
